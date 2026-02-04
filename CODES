@@ -1,0 +1,454 @@
+QUESTION 1:
+Create an online quiz display one question at a time check answer when user clicks submit button display the score do this using only html css and java.
+CODE:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8f4f8;
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .quiz-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            max-width: 550px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .progress {
+            text-align: center;
+            background: #4CAF50;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .question {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .options {
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            display: block;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #f9f9f9;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+        
+        .option:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.1);
+        }
+        
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        
+        .submit-btn:hover {
+            background: #45a049;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .score-container {
+            text-align: center;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .score {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .percentage {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .restart-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .restart-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>College Quiz (7 Questions)</h1>
+        <div class="progress" id="progress">Question 1 of 7</div>
+        
+        <div id="question-container">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <button class="submit-btn" onclick="submitAnswer()">Submit Answer</button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+        <div id="score-container" class="score-container">
+            <div class="score" id="score-display"></div>
+            <div class="percentage" id="percentage"></div>
+            <button class="restart-btn" onclick="location.reload()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {question: "What is 15 × 3?", options: ["40", "45", "50", "55"], correct: 1},
+            {question: "Which country is largest by land area?", options: ["China", "USA", "Russia", "Canada"], correct: 2},
+            {question: "What gas do plants need for photosynthesis?", options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], correct: 2},
+            {question: "How many sides does a triangle have?", options: ["2", "3", "4", "5"], correct: 1},
+            {question: "What is H₂O?", options: ["Oxygen", "Salt", "Sugar", "Water"], correct: 3},
+            {question: "Which animal is known as 'King of Jungle'?", options: ["Elephant", "Lion", "Tiger", "Bear"], correct: 1},
+            {question: "What is 100 - 25?", options: ["65", "70", "75", "80"], correct: 2}
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        function updateProgress() {
+            document.getElementById('progress').textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+        }
+
+        function loadQuestion() {
+            const questionEl = document.getElementById('question');
+            const optionsEl = document.getElementById('options');
+            const feedbackEl = document.getElementById('feedback');
+
+            feedbackEl.className = 'feedback';
+            feedbackEl.style.display = 'none';
+            
+            questionEl.textContent = questions[currentQuestion].question;
+            optionsEl.innerHTML = '';
+
+            updateProgress();
+
+            questions[currentQuestion].options.forEach((option, index) => {
+                const optionEl = document.createElement('label');
+                optionEl.className = 'option';
+                optionEl.innerHTML = `<input type="radio" name="answer" value="${index}"> ${option}`;
+                optionsEl.appendChild(optionEl);
+            });
+        }
+
+        function submitAnswer() {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            const feedbackEl = document.getElementById('feedback');
+
+            // Popup alert if no answer selected
+            if (!selected) {
+                alert('Please select an answer before submitting!');
+                return;
+            }
+
+            const answer = parseInt(selected.value);
+            const correctAnswer = questions[currentQuestion].options[questions[currentQuestion].correct];
+            
+            if (answer === questions[currentQuestion].correct) {
+                score++;
+                feedbackEl.innerHTML = '<strong>Correct!</strong> Great job!';
+                feedbackEl.className = 'feedback correct';
+            } else {
+                feedbackEl.innerHTML = `Incorrect. Correct answer: <strong>${correctAnswer}</strong>`;
+                feedbackEl.className = 'feedback incorrect';
+            }
+            
+            feedbackEl.style.display = 'block';
+
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    loadQuestion();
+                } else {
+                    showScore();
+                }
+            }, 2000);
+        }
+
+        function showScore() {
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('progress').style.display = 'none';
+            
+            const scoreEl = document.getElementById('score-display');
+            const percentageEl = document.getElementById('percentage');
+            
+            scoreEl.textContent = `Your Score: ${score} / ${questions.length}`;
+            percentageEl.textContent = `(${Math.round((score / questions.length) * 100)}%)`;
+            
+            document.getElementById('score-container').style.display = 'block';
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
+
+
+ 
+ 
+ 
+ 
+QUESTION2:
+Use string function in Javascript to perform the below:
+1.	Allow username with atleast 6 characters. Must not contain any spaces 
+2.	 Allows email id ending with.edu domain 
+3.	 The password should contain atleast one upper case. With minimum of 8 characters 
+4.	 Display greetings message using user name. If the user enters in lower case, it should get converted to upper case 
+5.	 Search for a particular word in a sentence. 
+6.	Display number of words in a sentence 
+7.	 Count how many times a particular character appears in a string of your choice. 
+8.	If a user types Marie Curie, should display first character of each word, first and last character of a word.
+CODE:
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JAVASCRIPT String Programs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: lightpink;
+        }
+        .box {
+            width: 500px;
+            background: mistyrose;
+            padding: 20px;
+            margin: 40px auto;
+            border-radius: 10px;
+        }
+        input, textarea, button {
+            width: 100%;
+            margin: 8px 0;
+            padding: 8px;
+        }
+        button {
+            background: hotpink;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        p {
+            background: pink;
+            padding: 6px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+    <h2>JAVASCRIPT STRING PROGRAMS</h2>
+
+    <input type="text" id="username" placeholder="Enter Username">
+    <button onclick="checkUsername()">Check Username</button>
+    <p id="uResult"></p>
+
+    <input type="text" id="email" placeholder="Enter Email ID">
+    <button onclick="checkEmail()">Check Email</button>
+    <p id="eResult"></p>
+
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="checkPassword()">Check Password</button>
+    <p id="pResult"></p>
+
+    <input type="text" id="name" placeholder="Enter Your Name">
+    <button onclick="greet()">Greet</button>
+    <p id="gResult"></p>
+
+    <textarea id="sentence" placeholder="Enter a sentence"></textarea>
+    <input type="text" id="word" placeholder="Word to search">
+    <button onclick="searchWord()">Search Word</button>
+    <p id="sResult"></p>
+
+    <button onclick="countWords()">Count Words</button>
+    <p id="wResult"></p>
+
+    <input type="text" id="char" placeholder="Character to count">
+    <button onclick="countChar()">Count Character</button>
+    <p id="cResult"></p>
+
+    <input type="text" id="singleWord" placeholder="Enter a word">
+    <button onclick="wordDetails()">Show Details</button>
+    <p id="mResult"></p>
+</div>
+
+<script>
+    function checkUsername() {
+        let u = document.getElementById("username").value;
+        if (u.length >= 6 && !u.includes(" ")) {
+            document.getElementById("uResult").innerHTML = "Valid Username";
+        } else {
+            document.getElementById("uResult").innerHTML = "Invalid Username";
+        }
+    }
+
+    function checkEmail() {
+        let e = document.getElementById("email").value;
+        if (e.endsWith(".edu")) {
+            document.getElementById("eResult").innerHTML = "Valid .edu Email";
+        } else {
+            document.getElementById("eResult").innerHTML = "Invalid Email";
+        }
+    }
+
+    function checkPassword() {
+        let p = document.getElementById("password").value;
+        let hasUpper = false;
+
+        for (let i = 0; i < p.length; i++) {
+            if (p[i] >= 'A' && p[i] <= 'Z') {
+                hasUpper = true;
+                break;
+            }
+        }
+
+        if (p.length >= 8 && hasUpper) {
+            document.getElementById("pResult").innerHTML = "Strong Password";
+        } else {
+            document.getElementById("pResult").innerHTML = "Weak Password";
+        }
+    }
+
+    function greet() {
+        let n = document.getElementById("name").value;
+        document.getElementById("gResult").innerHTML =
+            "HELLO " + n.toUpperCase();
+    }
+
+    function searchWord() {
+        let s = document.getElementById("sentence").value;
+        let w = document.getElementById("word").value;
+        if (s.includes(w)) {
+            document.getElementById("sResult").innerHTML = "Word Found";
+        } else {
+            document.getElementById("sResult").innerHTML = "Word Not Found";
+        }
+    }
+
+    function countWords() {
+        let s = document.getElementById("sentence").value;
+        let words = s.trim().split(" ");
+        document.getElementById("wResult").innerHTML =
+            "Number of words: " + words.length;
+    }
+
+    function countChar() {
+        let s = document.getElementById("sentence").value;
+        let ch = document.getElementById("char").value;
+        let count = 0;
+
+        for (let i = 0; i < s.length; i++) {
+            if (s[i] === ch) {
+                count++;
+            }
+        }
+        document.getElementById("cResult").innerHTML =
+            "Character count: " + count;
+    }
+
+    function wordDetails() {
+        let w = document.getElementById("singleWord").value;
+        let first = w.charAt(0);
+        let last = w.charAt(w.length - 1);
+
+        document.getElementById("mResult").innerHTML =
+            "First Letter: " + first + "<br>Last Letter: " + last;
+    }
+</script>
+</body>
+</html>
+
+
+
+
+ 
+ 
+ 
